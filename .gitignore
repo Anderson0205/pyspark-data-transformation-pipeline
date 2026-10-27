@@ -1,0 +1,36 @@
+# Variables privadas
+.env
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Spark / Hive
+spark-warehouse/
+**/spark-warehouse/
+metastore_db/
+**/metastore_db/
+derby.log
+**/derby.log
+*.log
+
+# Datos originales
+dataset1.csv
+dataset2.csv
+
+# Resultados
+output/
+filtered_data/
+total_value_per_year/
+
+# IDE
+.vscode/
+.idea/
+
+# Sistema
+.DS_Store
+Thumbs.db

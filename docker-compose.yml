@@ -1,0 +1,72 @@
+services:
+  namenode:
+    image: apache/hadoop:3.5.0
+    container_name: pyspark-namenode
+    hostname: namenode
+    user: root
+
+    command: >
+      bash -lc "
+      if [ ! -d /hadoop/dfs/name/current ]; then
+        hdfs namenode -format -force -nonInteractive;
+      fi &&
+      hdfs namenode
+      "
+
+    volumes:
+      - namenode_data:/hadoop/dfs/name
+      - ./docker/hadoop/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml:ro
+      - ./docker/hadoop/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml:ro
+
+    ports:
+      - "127.0.0.1:9870:9870"
+
+    healthcheck:
+      test: ["CMD-SHELL", "hdfs dfsadmin -report >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  datanode:
+    image: apache/hadoop:3.5.0
+    container_name: pyspark-datanode
+    hostname: datanode
+    user: root
+
+    command: ["hdfs", "datanode"]
+
+    depends_on:
+      namenode:
+        condition: service_healthy
+
+    volumes:
+      - datanode_data:/hadoop/dfs/data
+      - ./docker/hadoop/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml:ro
+      - ./docker/hadoop/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml:ro
+
+  notebook:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: pyspark-notebook
+    hostname: notebook
+
+    env_file:
+      - .env
+
+    depends_on:
+      namenode:
+        condition: service_healthy
+      datanode:
+        condition: service_started
+
+    volumes:
+      - ./:/workspace
+
+    ports:
+      - "127.0.0.1:8888:8888"
+
+volumes:
+  namenode_data:
+  datanode_data:
